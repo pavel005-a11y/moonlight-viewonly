@@ -1,3 +1,4 @@
+#include "viewonlyguard.h"
 #include <Limelight.h>
 #include "SDL_compat.h"
 #include "streaming/session.h"
@@ -208,7 +209,8 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     // Initialize the gamepad mask with currently attached gamepads to avoid
     // causing gamepads to unexpectedly disappear and reappear on the host
     // during stream startup as we detect currently attached gamepads one at a time.
-    m_GamepadMask = getAttachedGamepadMask();
+    // Do not advertise locally attached controllers in view-only mode.
+    m_GamepadMask = ViewOnlyGuard::enabled() ? 0 : getAttachedGamepadMask();
 
     SDL_zero(m_GamepadState);
     SDL_zero(m_LastTouchDownEvent);
@@ -352,6 +354,11 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
 
 void SdlInputHandler::setCaptureActive(bool active)
 {
+    // Viewing the stream must not grab the local pointer or keyboard.
+    if (ViewOnlyGuard::enabled()) {
+        active = false;
+    }
+
     if (active) {
         // If we're in relative mode, try to activate SDL's relative mouse mode
         if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
