@@ -422,23 +422,6 @@ int main(int argc, char *argv[])
 {
     SDL_SetMainReady();
 
-    // Client-side view-only mode. Remove the flag before Qt's CLI parser sees it.
-    // The normal client remains unchanged when this flag is absent.
-    for (int i = 1; i < argc; ) {
-        if (QByteArray(argv[i]) == "--view-only") {
-            qputenv("MOONLIGHT_VIEW_ONLY", "1");
-            for (int j = i; j < argc - 1; ++j) {
-                argv[j] = argv[j + 1];
-            }
-            --argc;
-            argv[argc] = nullptr;
-        }
-        else {
-            ++i;
-        }
-    }
-
-
     // Set the app version for the QCommandLineParser's showVersion() command
     QCoreApplication::setApplicationVersion(VERSION_STR);
 
@@ -829,8 +812,17 @@ int main(int argc, char *argv[])
     }
 #endif
 
+    // On Windows QCoreApplication::arguments() comes from GetCommandLineW(),
+    // not necessarily the mutable argv array. Strip our client-only switch
+    // from the QStringList used by every command-line parser.
+    QStringList commandLineArgs = app.arguments();
+    if (commandLineArgs.removeAll("--view-only") > 0) {
+        qputenv("MOONLIGHT_VIEW_ONLY", "1");
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "View-only mode enabled");
+    }
+
     GlobalCommandLineParser parser;
-    GlobalCommandLineParser::ParseResult commandLineParserResult = parser.parse(app.arguments());
+    GlobalCommandLineParser::ParseResult commandLineParserResult = parser.parse(commandLineArgs);
     switch (commandLineParserResult) {
     case GlobalCommandLineParser::ListRequested:
         // Don't log to the console since it will jumble the command output
@@ -1022,7 +1014,7 @@ int main(int argc, char *argv[])
             initialView = "qrc:/gui/CliStartStreamSegue.qml";
             StreamingPreferences* preferences = StreamingPreferences::get();
             StreamCommandLineParser streamParser;
-            streamParser.parse(app.arguments(), preferences);
+            streamParser.parse(commandLineArgs), preferences);
             QString host    = streamParser.getHost();
             QString appName = streamParser.getAppName();
             auto launcher   = new CliStartStream::Launcher(host, appName, preferences, &app);
@@ -1033,7 +1025,7 @@ int main(int argc, char *argv[])
         {
             initialView = "qrc:/gui/CliQuitStreamSegue.qml";
             QuitCommandLineParser quitParser;
-            quitParser.parse(app.arguments());
+            quitParser.parse(commandLineArgs));
             auto launcher = new CliQuitStream::Launcher(quitParser.getHost(), &app);
             engine.rootContext()->setContextProperty("launcher", launcher);
             break;
@@ -1042,7 +1034,7 @@ int main(int argc, char *argv[])
         {
             initialView = "qrc:/gui/CliPair.qml";
             PairCommandLineParser pairParser;
-            pairParser.parse(app.arguments());
+            pairParser.parse(commandLineArgs));
             auto launcher = new CliPair::Launcher(pairParser.getHost(), pairParser.getPredefinedPin(), &app);
             engine.rootContext()->setContextProperty("launcher", launcher);
             break;
@@ -1050,7 +1042,7 @@ int main(int argc, char *argv[])
     case GlobalCommandLineParser::ListRequested:
         {
             ListCommandLineParser listParser;
-            listParser.parse(app.arguments());
+            listParser.parse(commandLineArgs));
             auto launcher = new CliListApps::Launcher(listParser.getHost(), listParser, &app);
             launcher->execute(new ComputerManager(StreamingPreferences::get()));
             hasGUI = false;
