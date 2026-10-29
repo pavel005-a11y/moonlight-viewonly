@@ -1,3 +1,4 @@
+#include "viewonlyguard.h"
 #include "streaming/session.h"
 
 #include <Limelight.h>
@@ -123,7 +124,7 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
             }
 
             // Send this text to the PC
-            LiSendUtf8TextEvent(text, (unsigned int)strlen(text));
+            ViewOnlyGuard::send(LiSendUtf8TextEvent, text, (unsigned int)strlen(text));
 
             // SDL_GetClipboardText() allocates, so we must free
             SDL_free((void*)text);
@@ -511,7 +512,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         m_KeysDown.remove(MAKE_KEYPRESS_STATE(keyCode, modifiers, flags));
     }
 
-    LiSendKeyboardEvent2(keyCode,
+    ViewOnlyGuard::send(LiSendKeyboardEvent2, keyCode,
                          event->state == SDL_PRESSED ?
                              KEY_ACTION_DOWN : KEY_ACTION_UP,
                          modifiers,
@@ -529,7 +530,7 @@ void SdlInputHandler::raiseAllKeys()
                 (int)m_KeysDown.count());
 
     for (auto keyDown : std::as_const(m_KeysDown)) {
-        LiSendKeyboardEvent2(GET_KEYPRESS_CODE(keyDown),
+        ViewOnlyGuard::send(LiSendKeyboardEvent2, GET_KEYPRESS_CODE(keyDown),
                              KEY_ACTION_UP,
                              GET_KEYPRESS_EXTENDED_MODIFIER(keyDown),
                              GET_KEYPRESS_FLAGS(keyDown));
