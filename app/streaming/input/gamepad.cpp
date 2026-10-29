@@ -1,3 +1,4 @@
+#include "viewonlyguard.h"
 #include "streaming/session.h"
 
 #include <Limelight.h>
@@ -102,7 +103,7 @@ void SdlInputHandler::sendGamepadState(GamepadState* state)
         }
     }
 
-    LiSendMultiControllerEvent(state->index,
+    ViewOnlyGuard::send(LiSendMultiControllerEvent, state->index,
                                m_GamepadMask,
                                buttons,
                                lt,
@@ -151,7 +152,7 @@ void SdlInputHandler::sendGamepadBatteryState(GamepadState* state, SDL_JoystickP
         return;
     }
 
-    LiSendControllerBatteryEvent(state->index, batteryState, batteryPercentage);
+    ViewOnlyGuard::send(LiSendControllerBatteryEvent, state->index, batteryState, batteryPercentage);
 }
 
 Uint32 SdlInputHandler::mouseEmulationTimerCallback(Uint32 interval, void *param)
@@ -183,7 +184,7 @@ Uint32 SdlInputHandler::mouseEmulationTimerCallback(Uint32 interval, void *param
     deltaY = qAbs(deltaY) > MOUSE_EMULATION_DEADZONE ? deltaY - MOUSE_EMULATION_DEADZONE : 0;
 
     if (deltaX != 0 || deltaY != 0) {
-        LiSendMouseMoveEvent((short)deltaX, (short)deltaY);
+        ViewOnlyGuard::send(LiSendMouseMoveEvent, (short)deltaX, (short)deltaY);
     }
 
     return interval;
@@ -313,31 +314,31 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         }
         else if (state->mouseEmulationTimer != 0) {
             if (event->button == SDL_CONTROLLER_BUTTON_A) {
-                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
+                ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_PRESS, BUTTON_LEFT);
             }
             else if (event->button == SDL_CONTROLLER_BUTTON_B) {
-                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
+                ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_PRESS, BUTTON_RIGHT);
             }
             else if (event->button == SDL_CONTROLLER_BUTTON_X) {
-                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_MIDDLE);
+                ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_PRESS, BUTTON_MIDDLE);
             }
             else if (event->button == SDL_CONTROLLER_BUTTON_LEFTSHOULDER) {
-                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_X1);
+                ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_PRESS, BUTTON_X1);
             }
             else if (event->button == SDL_CONTROLLER_BUTTON_RIGHTSHOULDER) {
-                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_X2);
+                ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_PRESS, BUTTON_X2);
             }
             else if (event->button == SDL_CONTROLLER_BUTTON_DPAD_UP) {
-                LiSendScrollEvent(1);
+                ViewOnlyGuard::send(LiSendScrollEvent, 1);
             }
             else if (event->button == SDL_CONTROLLER_BUTTON_DPAD_DOWN) {
-                LiSendScrollEvent(-1);
+                ViewOnlyGuard::send(LiSendScrollEvent, -1);
             }
             else if (event->button == SDL_CONTROLLER_BUTTON_DPAD_RIGHT) {
-                LiSendHScrollEvent(1);
+                ViewOnlyGuard::send(LiSendHScrollEvent, 1);
             }
             else if (event->button == SDL_CONTROLLER_BUTTON_DPAD_LEFT) {
-                LiSendHScrollEvent(-1);
+                ViewOnlyGuard::send(LiSendHScrollEvent, -1);
             }
         }
     }
@@ -368,19 +369,19 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         }
         else if (state->mouseEmulationTimer != 0) {
             if (event->button == SDL_CONTROLLER_BUTTON_A) {
-                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+                ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_RELEASE, BUTTON_LEFT);
             }
             else if (event->button == SDL_CONTROLLER_BUTTON_B) {
-                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
+                ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
             }
             else if (event->button == SDL_CONTROLLER_BUTTON_X) {
-                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_MIDDLE);
+                ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_RELEASE, BUTTON_MIDDLE);
             }
             else if (event->button == SDL_CONTROLLER_BUTTON_LEFTSHOULDER) {
-                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_X1);
+                ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_RELEASE, BUTTON_X1);
             }
             else if (event->button == SDL_CONTROLLER_BUTTON_RIGHTSHOULDER) {
-                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_X2);
+                ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_RELEASE, BUTTON_X2);
             }
         }
     }
@@ -397,7 +398,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         SDL_PushEvent(&event);
 
         // Clear buttons down on this gamepad
-        LiSendMultiControllerEvent(state->index, m_GamepadMask,
+        ViewOnlyGuard::send(LiSendMultiControllerEvent, state->index, m_GamepadMask,
                                    0, 0, 0, 0, 0, 0, 0);
         return;
     }
@@ -412,7 +413,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
                                                             !Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug));
 
         // Clear buttons down on this gamepad
-        LiSendMultiControllerEvent(state->index, m_GamepadMask,
+        ViewOnlyGuard::send(LiSendMultiControllerEvent, state->index, m_GamepadMask,
                                    0, 0, 0, 0, 0, 0, 0);
         return;
     }
@@ -440,7 +441,7 @@ void SdlInputHandler::handleControllerSensorEvent(SDL_ControllerSensorEvent* eve
             memcpy(state->lastAccelEventData, event->data, sizeof(event->data));
             state->lastAccelEventTime = event->timestamp;
 
-            LiSendControllerMotionEvent((uint8_t)state->index, LI_MOTION_TYPE_ACCEL, event->data[0], event->data[1], event->data[2]);
+            ViewOnlyGuard::send(LiSendControllerMotionEvent, (uint8_t)state->index, LI_MOTION_TYPE_ACCEL, event->data[0], event->data[1], event->data[2]);
         }
         break;
     case SDL_SENSOR_GYRO:
@@ -451,7 +452,7 @@ void SdlInputHandler::handleControllerSensorEvent(SDL_ControllerSensorEvent* eve
             state->lastGyroEventTime = event->timestamp;
 
             // Convert rad/s to deg/s
-            LiSendControllerMotionEvent((uint8_t)state->index, LI_MOTION_TYPE_GYRO,
+            ViewOnlyGuard::send(LiSendControllerMotionEvent, (uint8_t)state->index, LI_MOTION_TYPE_GYRO,
                                         event->data[0] * 57.2957795f,
                                         event->data[1] * 57.2957795f,
                                         event->data[2] * 57.2957795f);
@@ -482,7 +483,7 @@ void SdlInputHandler::handleControllerTouchpadEvent(SDL_ControllerTouchpadEvent*
         return;
     }
 
-    LiSendControllerTouchEvent2((uint8_t)state->index, eventType,
+    ViewOnlyGuard::send(LiSendControllerTouchEvent2, (uint8_t)state->index, eventType,
                                 (uint8_t)event->touchpad, event->finger,
                                 event->x, event->y, event->pressure);
 }
@@ -760,7 +761,7 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
 #endif
             type == LI_CTYPE_PS;
 
-        LiSendControllerArrivalEvent(state->index, m_GamepadMask, type, supportedButtonFlags, capabilities);
+        ViewOnlyGuard::send(LiSendControllerArrivalEvent, state->index, m_GamepadMask, type, supportedButtonFlags, capabilities);
 #else
 
         // Send an empty event to tell the PC we've arrived
@@ -802,7 +803,7 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
                         state->index);
 
             // Send a final event to let the PC know this gamepad is gone
-            LiSendMultiControllerEvent(state->index, m_GamepadMask,
+            ViewOnlyGuard::send(LiSendMultiControllerEvent, state->index, m_GamepadMask,
                                        0, 0, 0, 0, 0, 0, 0);
 
             // Clear all remaining state from this slot
