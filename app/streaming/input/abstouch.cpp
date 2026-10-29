@@ -1,3 +1,4 @@
+#include "viewonlyguard.h"
 #include "input.h"
 
 #include <Limelight.h>
@@ -22,8 +23,8 @@
 Uint32 SdlInputHandler::longPressTimerCallback(Uint32, void*)
 {
     // Raise the left click and start a right click
-    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
-    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
+    ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+    ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_PRESS, BUTTON_RIGHT);
 
     return 0;
 }
@@ -127,13 +128,13 @@ void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
         }
 
         if (isPen) {
-            LiSendPenEvent(eventType, LI_TOOL_TYPE_PEN, 0, vidrelx / dst.w, vidrely / dst.h, event->pressure,
+            ViewOnlyGuard::send(LiSendPenEvent, eventType, LI_TOOL_TYPE_PEN, 0, vidrelx / dst.w, vidrely / dst.h, event->pressure,
                            0.0f, 0.0f, LI_ROT_UNKNOWN, LI_TILT_UNKNOWN);
         }
         else
 #endif
         {
-            LiSendTouchEvent(eventType, pointerId, vidrelx / dst.w, vidrely / dst.h, event->pressure,
+            ViewOnlyGuard::send(LiSendTouchEvent, eventType, pointerId, vidrelx / dst.w, vidrely / dst.h, event->pressure,
                              0.0f, 0.0f, LI_ROT_UNKNOWN);
         }
 
@@ -197,7 +198,7 @@ void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
         short y = qMin(qMax((int)(event->y * windowHeight), dst.y), dst.y + dst.h);
 
         // Update the cursor position relative to the video region
-        LiSendMousePositionEvent(x - dst.x, y - dst.y, dst.w, dst.h);
+        ViewOnlyGuard::send(LiSendMousePositionEvent, x - dst.x, y - dst.y, dst.w, dst.h);
     }
 
     if (event->type == SDL_FINGERDOWN) {
@@ -210,7 +211,7 @@ void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
                                         nullptr);
 
         // Left button down on finger down
-        LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
+        ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_PRESS, BUTTON_LEFT);
     }
     else if (event->type == SDL_FINGERUP) {
         m_LastTouchUpEvent = *event;
@@ -220,9 +221,9 @@ void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
         m_LongPressTimer = 0;
 
         // Left button up on finger up
-        LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+        ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_RELEASE, BUTTON_LEFT);
 
         // Raise right button too in case we triggered a long press gesture
-        LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
+        ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
     }
 }
