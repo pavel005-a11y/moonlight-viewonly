@@ -422,6 +422,23 @@ int main(int argc, char *argv[])
 {
     SDL_SetMainReady();
 
+    // Client-side view-only mode. Remove the flag before Qt's CLI parser sees it.
+    // The normal client remains unchanged when this flag is absent.
+    for (int i = 1; i < argc; ) {
+        if (QByteArray(argv[i]) == "--view-only") {
+            qputenv("MOONLIGHT_VIEW_ONLY", "1");
+            for (int j = i; j < argc - 1; ++j) {
+                argv[j] = argv[j + 1];
+            }
+            --argc;
+            argv[argc] = nullptr;
+        }
+        else {
+            ++i;
+        }
+    }
+
+
     // Set the app version for the QCommandLineParser's showVersion() command
     QCoreApplication::setApplicationVersion(VERSION_STR);
 
