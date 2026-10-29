@@ -2008,6 +2008,40 @@ void Session::exec()
             continue;
         }
 #endif
+        // In view-only mode do not dispatch physical input into SdlInputHandler.
+        // SDL window, playback and quit events must still be processed.
+        if (qEnvironmentVariableIsSet("MOONLIGHT_VIEW_ONLY")) {
+            switch (event.type) {
+            case SDL_KEYDOWN:
+            case SDL_KEYUP:
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+            case SDL_MOUSEMOTION:
+            case SDL_MOUSEWHEEL:
+            case SDL_CONTROLLERAXISMOTION:
+            case SDL_CONTROLLERBUTTONDOWN:
+            case SDL_CONTROLLERBUTTONUP:
+            case SDL_CONTROLLERDEVICEADDED:
+            case SDL_CONTROLLERDEVICEREMOVED:
+            case SDL_JOYDEVICEADDED:
+            case SDL_FINGERDOWN:
+            case SDL_FINGERMOTION:
+            case SDL_FINGERUP:
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+            case SDL_CONTROLLERSENSORUPDATE:
+            case SDL_CONTROLLERTOUCHPADDOWN:
+            case SDL_CONTROLLERTOUCHPADUP:
+            case SDL_CONTROLLERTOUCHPADMOTION:
+#endif
+#if SDL_VERSION_ATLEAST(2, 24, 0)
+            case SDL_JOYBATTERYUPDATED:
+#endif
+                continue;
+            default:
+                break;
+            }
+        }
+
         switch (event.type) {
         case SDL_QUIT:
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
