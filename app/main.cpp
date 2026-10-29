@@ -1014,7 +1014,7 @@ int main(int argc, char *argv[])
             initialView = "qrc:/gui/CliStartStreamSegue.qml";
             StreamingPreferences* preferences = StreamingPreferences::get();
             StreamCommandLineParser streamParser;
-            streamParser.parse(commandLineArgs), preferences);
+            streamParser.parse(commandLineArgs, preferences);
             QString host    = streamParser.getHost();
             QString appName = streamParser.getAppName();
             auto launcher   = new CliStartStream::Launcher(host, appName, preferences, &app);
@@ -1025,7 +1025,7 @@ int main(int argc, char *argv[])
         {
             initialView = "qrc:/gui/CliQuitStreamSegue.qml";
             QuitCommandLineParser quitParser;
-            quitParser.parse(commandLineArgs));
+            quitParser.parse(commandLineArgs);
             auto launcher = new CliQuitStream::Launcher(quitParser.getHost(), &app);
             engine.rootContext()->setContextProperty("launcher", launcher);
             break;
@@ -1034,7 +1034,7 @@ int main(int argc, char *argv[])
         {
             initialView = "qrc:/gui/CliPair.qml";
             PairCommandLineParser pairParser;
-            pairParser.parse(commandLineArgs));
+            pairParser.parse(commandLineArgs);
             auto launcher = new CliPair::Launcher(pairParser.getHost(), pairParser.getPredefinedPin(), &app);
             engine.rootContext()->setContextProperty("launcher", launcher);
             break;
@@ -1042,7 +1042,7 @@ int main(int argc, char *argv[])
     case GlobalCommandLineParser::ListRequested:
         {
             ListCommandLineParser listParser;
-            listParser.parse(commandLineArgs));
+            listParser.parse(commandLineArgs);
             auto launcher = new CliListApps::Launcher(listParser.getHost(), listParser, &app);
             launcher->execute(new ComputerManager(StreamingPreferences::get()));
             hasGUI = false;
