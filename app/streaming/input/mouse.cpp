@@ -1,3 +1,4 @@
+#include "viewonlyguard.h"
 #include "input.h"
 
 #include <Limelight.h>
@@ -84,7 +85,7 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
             button = BUTTON_RIGHT;
     }
 
-    LiSendMouseButtonEvent(event->state == SDL_PRESSED ?
+    ViewOnlyGuard::send(LiSendMouseButtonEvent, event->state == SDL_PRESSED ?
                                BUTTON_ACTION_PRESS :
                                BUTTON_ACTION_RELEASE,
                            button);
@@ -158,7 +159,7 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
             }
         }
         if (mouseInVideoRegion || m_MouseWasInVideoRegion || m_PendingMouseButtonsAllUpOnVideoRegionLeave) {
-            LiSendMousePositionEvent((short)x, (short)y, dst.w, dst.h);
+            ViewOnlyGuard::send(LiSendMousePositionEvent, (short)x, (short)y, dst.w, dst.h);
         }
 
         // Adjust the cursor visibility if applicable
@@ -174,7 +175,7 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         m_MouseWasInVideoRegion = mouseInVideoRegion;
     }
     else {
-        LiSendMouseMoveEvent(xrel, yrel);
+        ViewOnlyGuard::send(LiSendMouseMoveEvent, xrel, yrel);
     }
 }
 
@@ -211,7 +212,7 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
         event->preciseY = SDL_clamp(event->preciseY, -1.0f, 1.0f);
 #endif
 
-        LiSendHighResScrollEvent((short)(event->preciseY * 120)); // WHEEL_DELTA
+        ViewOnlyGuard::send(LiSendHighResScrollEvent, (short)(event->preciseY * 120)); // WHEEL_DELTA
     }
 
     if (event->preciseX != 0.0f) {
@@ -226,7 +227,7 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
         event->preciseX = SDL_clamp(event->preciseX, -1.0f, 1.0f);
 #endif
 
-        LiSendHighResHScrollEvent((short)(event->preciseX * 120)); // WHEEL_DELTA
+        ViewOnlyGuard::send(LiSendHighResHScrollEvent, (short)(event->preciseX * 120)); // WHEEL_DELTA
     }
 #else
     if (event->y != 0) {
@@ -240,7 +241,7 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
         event->y = SDL_clamp(event->y, -1, 1);
 #endif
 
-        LiSendScrollEvent((signed char)event->y);
+        ViewOnlyGuard::send(LiSendScrollEvent, (signed char)event->y);
     }
 
     if (event->x != 0) {
@@ -254,7 +255,7 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
         event->x = SDL_clamp(event->x, -1, 1);
 #endif
 
-        LiSendHScrollEvent((signed char)event->x);
+        ViewOnlyGuard::send(LiSendHScrollEvent, (signed char)event->x);
     }
 #endif
 }
