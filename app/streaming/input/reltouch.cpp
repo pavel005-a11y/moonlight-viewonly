@@ -1,3 +1,4 @@
+#include "viewonlyguard.h"
 #include "input.h"
 
 #include <Limelight.h>
@@ -16,13 +17,13 @@
 
 Uint32 SdlInputHandler::releaseLeftButtonTimerCallback(Uint32, void*)
 {
-    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+    ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_RELEASE, BUTTON_LEFT);
     return 0;
 }
 
 Uint32 SdlInputHandler::releaseRightButtonTimerCallback(Uint32, void*)
 {
-    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
+    ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
     return 0;
 }
 
@@ -39,7 +40,7 @@ Uint32 SdlInputHandler::dragTimerCallback(Uint32, void *param)
         me->m_DragButton = BUTTON_LEFT;
     }
 
-    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, me->m_DragButton);
+    ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_PRESS, me->m_DragButton);
 
     return 0;
 }
@@ -100,7 +101,7 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
         short deltaX = static_cast<short>(event->dx * m_StreamWidth);
         short deltaY = static_cast<short>(event->dy * m_StreamHeight);
         if (deltaX != 0 || deltaY != 0) {
-            LiSendMouseMoveEvent(deltaX, deltaY);
+            ViewOnlyGuard::send(LiSendMouseMoveEvent, deltaX, deltaY);
         }
     }
 
@@ -133,7 +134,7 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
 
         // Release any drag
         if (m_DragButton != 0) {
-            LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, m_DragButton);
+            ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_RELEASE, m_DragButton);
             m_DragButton = 0;
         }
         // 2 finger tap
@@ -143,7 +144,7 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
             m_TouchDownEvent[0].timestamp = 0;
 
             // Press down the right mouse button
-            LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
+            ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_PRESS, BUTTON_RIGHT);
 
             // Queue a timer to release it in 100 ms
             SDL_RemoveTimer(m_RightButtonReleaseTimer);
@@ -154,7 +155,7 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
         // 1 finger tap
         else if (event->timestamp - m_TouchDownEvent[0].timestamp < 250) {
             // Press down the left mouse button
-            LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
+            ViewOnlyGuard::send(LiSendMouseButtonEvent, BUTTON_ACTION_PRESS, BUTTON_LEFT);
 
             // Queue a timer to release it in 100 ms
             SDL_RemoveTimer(m_LeftButtonReleaseTimer);
