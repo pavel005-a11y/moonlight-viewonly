@@ -36,6 +36,12 @@ session = (APP / "streaming" / "session.cpp").read_text(encoding="utf-8")
 handler = (INPUT / "input.cpp").read_text(encoding="utf-8")
 
 assert 'commandLineArgs.removeAll("--view-only")' in main
+assert "streamParser.parse(commandLineArgs, preferences);" in main
+assert "quitParser.parse(commandLineArgs);" in main
+assert "pairParser.parse(commandLineArgs);" in main
+assert "listParser.parse(commandLineArgs);" in main
+assert "parse(commandLineArgs))" not in main
+
 assert 'ViewOnlyGuard::enabled() ? 0 : m_InputHandler->getAttachedGamepadMask()' in session
 assert 'm_GamepadMask = ViewOnlyGuard::enabled() ? 0 :' in handler
 assert 'if (ViewOnlyGuard::enabled())' in handler
