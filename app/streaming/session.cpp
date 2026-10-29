@@ -1,4 +1,5 @@
 #include "session.h"
+#include "input/viewonlyguard.h"
 #include "settings/streamingpreferences.h"
 #include "streaming/streamutils.h"
 #include "backend/richpresencemanager.h"
@@ -1629,7 +1630,7 @@ bool Session::startConnectionAsync()
                       m_App.id, &m_StreamConfig,
                       enableGameOptimizations,
                       m_Preferences->playAudioOnHost,
-                      m_InputHandler->getAttachedGamepadMask(),
+                      ViewOnlyGuard::enabled() ? 0 : m_InputHandler->getAttachedGamepadMask(),
                       !m_Preferences->multiController,
                       rtspSessionUrl);
     } catch (const GfeHttpResponseException& e) {
